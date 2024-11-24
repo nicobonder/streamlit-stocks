@@ -153,38 +153,50 @@ if st.sidebar.button("Submit"):
         fill_value=0
     )
 
-    # Crear el heatmap usando Plotly
-    fig_heatmap = px.imshow(
-        heatmap_data,  # Convierte a formato de matriz 12x31
-        # Colores de rojo (negativo) a verde (positivo)
-        color_continuous_scale='RdYlGn',
-        color_continuous_midpoint=0,
-        labels={'color': '% Change'},  # Etiqueta para la leyenda de color
-        title=f"Average Daily % Change Heatmap ({ticker_graph})",
-
+    st.subheader(f"Average Daily % Change Heatmap - {ticker_graph}")
+    fig_heatmap = go.Figure(
+        data=go.Heatmap(
+            z=heatmap_data.values,
+            x=heatmap_data.columns,
+            y=heatmap_data.index,
+            colorscale='RdYlGn',
+            zmid=0,
+            colorbar=dict(
+                title="% Change",
+                len=0.7,  # Reduce la longitud de la barra de color para que no ocupe todo el alto
+            ),
+            xgap=2,  # Espacio entre columnas
+            ygap=2
+        )
     )
 
-    # Configurar layout para mostrar los días en el eje X y los meses en el eje Y
+    # Ajusta el diseño del heatmap
     fig_heatmap.update_layout(
         xaxis_title="Day of Month",
         yaxis_title="Month",
-        height=800,
-        width=1000,
+        # autosize=False,
+        height=450,  # Tamaño del área total
+        width=1400,
+        # Ajusta los márgenes si es necesario
+        margin=dict(l=0, r=0, t=0, b=0),
     )
 
-    # NUEVO: Ajustar ticks para alinear correctamente días y meses
+    # Ajusta el tamaño de las celdas del heatmap
     fig_heatmap.update_xaxes(
         tickmode='array',
-        tickvals=list(range(1, 32)),  # Valores de 1 a 31 para los días
+        tickvals=list(range(1, 32)),
         ticktext=[str(day) for day in range(1, 32)]
     )
-
     fig_heatmap.update_yaxes(
         tickmode='array',
-        tickvals=list(range(1, 13)),  # Valores de 1 a 12 para los meses
+        tickvals=list(range(1, 13)),
         ticktext=['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun',
                   'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'],
+        # scaleanchor="x",  # Vincula la escala de x y y
     )
+
+    fig_heatmap.update_xaxes(fixedrange=True)
+    fig_heatmap.update_yaxes(fixedrange=True)
 
     # Mostrar el heatmap en Streamlit
     st.plotly_chart(fig_heatmap)
@@ -195,7 +207,6 @@ else:
 
 # *** IDEAS:
 # 1. Correlacion entre crecimiento del precio de accion y alguna otra vble, tipo el crecimiento del EPS o de los revenue de los 3 trimestres anteriores.
-# 2. Heatmap para los dias del mes, como para mostrar si es mas verde o mas rojo un determinado dia
 # 3. Correlacion entre dia del mes y % de variacion
 # 4. plost.donut_chart mostrando % de veces que algo fue bull, bear o vario poco, por ejemplo.
 # Esto podria estar en una fila con 2 columnas, eso en una columna y en la otra lo mismo en una tabla.
