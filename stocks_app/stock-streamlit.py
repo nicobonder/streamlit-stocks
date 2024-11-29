@@ -33,6 +33,30 @@ if endDate <= today:
 else:
     endDate_adjusted = endDate
 
+# Función para obtener los indicadores relevantes de un ticker
+
+
+def get_ticker_data(ticker):
+    dat = yf.Ticker(ticker)
+    return {
+        "Trailing P/E": dat.info.get("trailingPE"),
+        "Forward P/E": dat.info.get("forwardPE"),
+        "Trailing PEG Ratio": dat.info.get("trailingPegRatio"),
+        "Price to Sales (TTM)": dat.info.get("priceToSalesTrailing12Months"),
+        "Price to Book": dat.info.get("priceToBook"),
+        "Operating Margins": dat.info.get("operatingMargins"),
+        "Return on Assets": dat.info.get("returnOnAssets"),
+        "Earnings Quarterly Growth": dat.info.get("earningsQuarterlyGrowth"),
+        "Revenue Growth": dat.info.get("revenueGrowth"),
+        "Debt to Equity": dat.info.get("debtToEquity"),
+        "Current Ratio": dat.info.get("currentRatio"),
+        "Beta": dat.info.get("beta"),
+        "Held by Insiders": dat.info.get("heldPercentInsiders"),
+        "Held by Institutions": dat.info.get("heldPercentInstitutions"),
+        "Short Ratio": dat.info.get("shortRatio"),
+        "Short % of Float": dat.info.get("shortPercentOfFloat"),
+    }
+
 
 # Botón para actualizar los gráficos
 if st.sidebar.button("Submit"):
@@ -133,6 +157,21 @@ if st.sidebar.button("Submit"):
         st.warning(f"One or both tickers ('{ticker1}', '{
                    ticker2}') not found in the data.")
 
+    # Crear un DataFrame para mostrar en la tabla
+    # Obtener datos de los tickers
+    st.subheader("Ticker Comparison")
+    data1 = get_ticker_data(ticker1)
+    data2 = get_ticker_data(ticker2)
+
+    comparison_data = pd.DataFrame({
+        "Indicator": data1.keys(),
+        ticker1: data1.values(),
+        ticker2: data2.values(),
+    })
+
+    # Mostrar tabla
+    st.table(comparison_data)
+
     # Feature Heatmap
     # Extrae el mes y el día para crear una columna `Month-Day`
     df_adj_close['Month-Day'] = df_adj_close['Date'].dt.strftime('%m-%d')
@@ -163,10 +202,10 @@ if st.sidebar.button("Submit"):
             zmid=0,
             colorbar=dict(
                 title="% Change",
-                len=0.7,  # Reduce la longitud de la barra de color para que no ocupe todo el alto
+                len=0.7,  # Control the colorbar height
             ),
-            xgap=2,  # Espacio entre columnas
-            ygap=2
+            xgap=2,  # add gap between columns
+            ygap=2  # add gap between rows
         )
     )
 
@@ -174,10 +213,8 @@ if st.sidebar.button("Submit"):
     fig_heatmap.update_layout(
         xaxis_title="Day of Month",
         yaxis_title="Month",
-        # autosize=False,
-        height=450,  # Tamaño del área total
+        height=450,
         width=1400,
-        # Ajusta los márgenes si es necesario
         margin=dict(l=0, r=0, t=0, b=0),
     )
 
@@ -195,11 +232,12 @@ if st.sidebar.button("Submit"):
         # scaleanchor="x",  # Vincula la escala de x y y
     )
 
-    fig_heatmap.update_xaxes(fixedrange=True)
-    fig_heatmap.update_yaxes(fixedrange=True)
+    fig_heatmap.update_xaxes(fixedrange=True)  # Block the resize feature
+    fig_heatmap.update_yaxes(fixedrange=True)  # Block the resize feature
 
     # Mostrar el heatmap en Streamlit
     st.plotly_chart(fig_heatmap)
+
 
 else:
     st.warning(f"Ticker '{ticker_graph}' not found in the data.")
@@ -207,12 +245,17 @@ else:
 
 # *** IDEAS:
 # 1. Correlacion entre crecimiento del precio de accion y alguna otra vble, tipo el crecimiento del EPS o de los revenue de los 3 trimestres anteriores.
-# 3. Correlacion entre dia del mes y % de variacion
+# 2. Grafico de barras mostrando promedio de % de cambio para cada mes, asi se puede saber qué mes tiene más crecimiento o caida
+# 3. Correlacion entre dia del mes y % de variacion. O sea grafico de 2 vbles mostrando los 31 dias del mes y el % de cambio promedio que tiene cada dia
 # 4. plost.donut_chart mostrando % de veces que algo fue bull, bear o vario poco, por ejemplo.
-# Esto podria estar en una fila con 2 columnas, eso en una columna y en la otra lo mismo en una tabla.
+    # Esto podria estar en una fila con 2 columnas, eso en una columna y en la otra lo mismo en una tabla.
 # 5. Crear algun tipo de indicador como el de Zacks: elegir 3 o 4 medidas de crecimiento, ponderarlas y que el promedio de un puntaje, si está entre tal numero y tal numero, tiene una A, por ej.
+# 6. Seleccion multiple: tomar de yahoo vbles como Trailing P/E, Forward P/E, PEG, Price/Sales, Operating Margin,  Return on Assets, Quarterly Revenue Growth, Quarterly Earnings Growth,
+    # Total Debt/Equity, Current Ratio, Short Ratio, Short % of Float, Beta, % Held by Insiders, % Held by Institutions, Diluted EPS. Y que se pueda comparar 2 empresas con cualquiera de esas vbles.
+    # Cada variable elegida por el user sería una nueva row y la tabla tendria 3 columnas: Variables, Ticker 1 y Ticker 2
+
+    # Haciendo .info veo: trailingPE, forwardPE, trailingPegRatio, priceToSalesTrailing12Months, priceToBook, operatingMargins, returnOnAssets, earningsQuarterlyGrowth, revenueGrowth, debtToEquity, currentRatio, beta, heldPercentInsiders, heldPercentInstitutions, shortRatio, shortPercentOfFloat
 
 
-# Mejoras pendientes:
-# GRafico heatmap mas grande.
+# *** Mejoras pendientes:
 # Data solo YY-MM-DD
